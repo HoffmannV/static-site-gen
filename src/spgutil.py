@@ -46,4 +46,7 @@ def split_nodes(nodes):
     delimiters = [('`', TextType.CODE), ('**', TextType.BOLD), ('*', TextType.ITALIC)]
     for x, y in delimiters:
         delimited_nodes = split_nodes_delimiter(delimited_nodes, x, y)
+        for i in range(len(delimited_nodes)):
+            delimited_nodes[i] = TextNode(text_node_to_html_node(delimited_nodes[i]).to_html(), TextType.NORMAL)
+            #print(delimited_nodes)
     return delimited_nodes
