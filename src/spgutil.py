@@ -1,5 +1,6 @@
 from textnode import TextType, TextNode
 from leafnode import LeafNode
+from parentnode import ParentNode
 import re
 
 def text_node_to_html_node(text_node):
@@ -105,4 +106,69 @@ def text_to_text_nodes(text):
     new_nodes = split_nodes_link(new_nodes)
     return new_nodes
 
+def markdown_to_blocks(markdown):
+    content_lst = markdown.strip().split("\n")
+    tmp = []
+    content_blocks = []
+    for i in range(len(content_lst)):
+        if content_lst[i] == '':
+            content_blocks.append('\n'.join(tmp))
+            tmp = []
+        elif  i == len(content_lst) - 1:
+            tmp.append(content_lst[i])
+            content_blocks.append('\n'.join(tmp))
+        else:
+            tmp.append(content_lst[i])
+    return content_blocks
+
+def block_to_block_type(block):
+    max_heading = 6
+    heading_type = 0
+
+    #Check for heading
+    if block[0] == '#':
+        for char in block:
+            if char == '#':
+                heading_type += 1
+            elif char == ' ' and heading_type < 7:
+                return ParentNode(children=list(), tag=f"h{heading_type}")
+            else:
+                raise ValueError("Incorrect heading markdown")
+
+    #check for code block
+    elif ''.join(block[:3]) == "```":
+        if ''.join(block[-3:]) == "```":
+            return ParentNode(list(), "input", {"readonly": "readonly", "style": "width: 100%; padding: 10px; font-family: monospace; font-size: 14px; background-color: #f5f5f5; border: 1px solid #ccc; color: #333; overflow: auto; white-space: pre; border-radius: 4px; pointer-events: none; user-select: text;"}) 
+        else:
+            raise ValueError("Code block not closed")
+
+    #check for qoute
+    elif block[0] == '>':
+        lines = block.split('\n')
+        for line in lines:
+            if line[0] != '>':
+                raise ValueError("Every line in a qoute block must begin with the \'>\' character")
+        return ParentNode(list(), "blockquote")
+    
+    #check for unordered list
+    elif block[0] == '*' or block[0] == '-':
+        lines = block.split('\n')
+        for line in lines:
+            if line[0] != '*' and block[0] != '-':
+                raise ValueError("Every line in a unordered list block must begin with the \'*\' or \'-\' character")
+            if line[1] != ' ':
+                raise ValueError("There has to be a whitespace after the \'*\' or \'-\' character")
+        return ParentNode(list(), "ul")
+    
+    #chekc for ordered list
+    elif block[1] == '.':
+        lines = block.split('\n')
+        for i in range(len(lines)):
+            if lines[i][0] != str(i+1) or lines[i][1] != '.' or lines[i][2] != ' ':
+                raise ValueError(f"Every line in a ordered list block must begin with the appropriate number followed by the \'.\' character and a white space\n{lines}")
+        return ParentNode(list(), "ol")
+
+    else:
+        return ParentNode(list(), "p")
+ 
 

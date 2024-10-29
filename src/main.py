@@ -25,14 +25,19 @@ def main():
         divElement.children.append(htmlNode)
 
     #print(divElement.to_html())
-
+    file = open('public/text', 'r')
+    content = file.read()
+    file.close()
     text = TextNode("This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)", TextType.NORMAL)
     new_nodes = spgutil.text_to_text_nodes(text)
 
     html = ParentNode(children=list(), tag="div")
     for node in new_nodes:
         html.children.append(spgutil.text_node_to_html_node(node))
-    print(html.to_html())
+    
+    content_blocks = spgutil.markdown_to_blocks(content)
+
+    print(f"{spgutil.block_to_block_type("* asd\n* asd\n* ads")}")
 
 if __name__ == "__main__":    
     main()
