@@ -24,9 +24,14 @@ def split_nodes_delimiter(text_node, delimiter, text_type):
     text_node_list = list()
 
     for node in text_node:
+        #print(node)
         if len(node.text.split(delimiter)) % 2 == 0:
             raise ValueError("Invalid markdown, formatted section not closed")
-        
+        if '*' in node.text and '**' in node.text:
+            while '**' in node.text:
+                node.text = node.text.replace('**', '<b>', 1)
+                node.text = node.text.replace('**', '</b>', 1)
+
         text = node.text
         if delimiter not in text:
             text_node_list.append(node)
@@ -52,7 +57,6 @@ def split_nodes_text(nodes):
         delimited_nodes = split_nodes_delimiter(delimited_nodes, x, y)
         for i in range(len(delimited_nodes)):
             delimited_nodes[i] = TextNode(text_node_to_html_node(delimited_nodes[i]).to_html(), TextType.HTML)
-            #print(delimited_nodes)
     return delimited_nodes
 
 def split_nodes_image(old_nodes):
@@ -138,7 +142,7 @@ def block_to_block_type(block):
     #check for code block
     elif ''.join(block[:3]) == "```":
         if ''.join(block[-3:]) == "```":
-            return ParentNode(list(), "input", {"readonly": "readonly", "style": "width: 100%; padding: 10px; font-family: monospace; font-size: 14px; background-color: #f5f5f5; border: 1px solid #ccc; color: #333; overflow: auto; white-space: pre; border-radius: 4px; pointer-events: none; user-select: text;"}) 
+            return ParentNode(list(), "code", {"style": "width: auto; padding: 10px; font-family: monospace; font-size: 14px; background-color: #f5f5f5; border: 1px solid #ccc; color: #333; overflow: auto; white-space: pre; border-radius: 4px; user-select: text;"}) 
         else:
             raise ValueError("Code block not closed")
 
@@ -171,4 +175,67 @@ def block_to_block_type(block):
     else:
         return ParentNode(list(), "p")
  
+def markdown_to_html_node(markdown):
+    final_node = ParentNode(list(), "div")
+    text_blocks = markdown_to_blocks(markdown)
 
+    for block in text_blocks:
+        parentnode = block_to_block_type(block)
+        #print(parentnode)
+
+        #if the block is a unordered list remove all the * at the beginning
+        if parentnode.tag == "ul":
+            block = block.replace("* ", "")
+            text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
+            for node in text_nodes:
+                list_items = node.text.split('\n')
+                for item in list_items:
+                    parentnode.children.append(LeafNode(f"<li>{item}</li>"))
+            final_node.children.append(parentnode)
+        
+        #if the block is a ordered list remove all the heading numbers eg 1. 2. and so on
+        elif parentnode.tag == "ol":
+            tmp = block.split("\n")
+            for i in range(len(tmp)):
+                tmp[i] = tmp[i].replace(f"{i+1}. ", "")
+            block = "\n".join(tmp)
+            text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
+            for node in text_nodes:
+                list_items = node.text.split('\n')
+                for item in list_items:
+                    parentnode.children.append(LeafNode(f"<li>{item}</li>"))
+            final_node.children.append(parentnode)
+
+        #handle heading block
+        elif parentnode.tag[0] == 'h':
+            while block[0] == '#':
+                block = block[1:]
+            block = block.strip()
+            parentnode.children.append(text_node_to_html_node(TextNode(block, TextType.NORMAL)))
+            final_node.children.append(parentnode)
+        else:
+            if parentnode.tag == "code":
+                parentnode.tag = "div"
+                text_nodes = text_to_text_nodes(TextNode(block[2:-2], TextType.NORMAL))
+                text_nodes = [node for node in text_nodes if node.text != ' ']
+                for node in text_nodes:
+                    parentnode.children.append(text_node_to_html_node(node))
+                final_node.children.append(parentnode)
+            elif parentnode.tag == "blockquote":
+                text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
+                for node in text_nodes:
+                    node.text = node.text[2:]
+                    parentnode.children.append(text_node_to_html_node(node))
+                final_node.children.append(parentnode)
+            elif parentnode.tag == "p":
+                text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
+                for node in text_nodes:
+                    parentnode.children.append(text_node_to_html_node(node))
+                final_node.children.append(parentnode)
+            else:
+                pass
+    
+    return final_node
+
+
+            

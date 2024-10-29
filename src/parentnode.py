@@ -11,7 +11,12 @@ class ParentNode(HTMLNode):
             raise ValueError("The node cannot have no children")
         
         html_element = ""
+        #if self.children == None:
+        #    return self.enclose_element_in_tag(html_element)
+        #else:
+
         for child in self.children:
+#            print(child)
             html_element += child.to_html()
 
         return self.enclose_element_in_tag(html_element)
