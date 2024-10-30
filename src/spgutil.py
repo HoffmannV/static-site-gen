@@ -1,7 +1,7 @@
 from textnode import TextType, TextNode
 from leafnode import LeafNode
 from parentnode import ParentNode
-import re
+import re, os
 
 def text_node_to_html_node(text_node):
     match(text_node.text_type):
@@ -142,7 +142,7 @@ def block_to_block_type(block):
     #check for code block
     elif ''.join(block[:3]) == "```":
         if ''.join(block[-3:]) == "```":
-            return ParentNode(list(), "code", {"style": "width: auto; padding: 10px; font-family: monospace; font-size: 14px; background-color: #f5f5f5; border: 1px solid #ccc; color: #333; overflow: auto; white-space: pre; border-radius: 4px; user-select: text;"}) 
+            return ParentNode(list(), "code") 
         else:
             raise ValueError("Code block not closed")
 
@@ -155,7 +155,7 @@ def block_to_block_type(block):
         return ParentNode(list(), "blockquote")
     
     #check for unordered list
-    elif block[0] == '*' or block[0] == '-':
+    elif (block[0] == '*' or block[0] == '-') and block[1] == ' ':
         lines = block.split('\n')
         for line in lines:
             if line[0] != '*' and block[0] != '-':
@@ -185,25 +185,27 @@ def markdown_to_html_node(markdown):
 
         #if the block is a unordered list remove all the * at the beginning
         if parentnode.tag == "ul":
-            block = block.replace("* ", "")
+            block_lines = block.split("\n")
+            for i in range(len(block_lines)):
+                if block_lines[i][:2] == '* ':
+                    block_lines[i] = f"<li>{block_lines[i].replace("* ", "", 1)}</li>"
+                if block_lines[i][:2] == '- ':
+                    block_lines[i] = f"<li>{block_lines[i].replace("- ", "", 1)}</li>"
+            block = "\n".join(block_lines)
             text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
             for node in text_nodes:
-                list_items = node.text.split('\n')
-                for item in list_items:
-                    parentnode.children.append(LeafNode(f"<li>{item}</li>"))
+                parentnode.children.append(LeafNode(node.text))
             final_node.children.append(parentnode)
         
         #if the block is a ordered list remove all the heading numbers eg 1. 2. and so on
         elif parentnode.tag == "ol":
             tmp = block.split("\n")
             for i in range(len(tmp)):
-                tmp[i] = tmp[i].replace(f"{i+1}. ", "")
+                tmp[i] = f"<li>{tmp[i].replace(f"{i+1}. ", "", 1)}</li>"
             block = "\n".join(tmp)
             text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
             for node in text_nodes:
-                list_items = node.text.split('\n')
-                for item in list_items:
-                    parentnode.children.append(LeafNode(f"<li>{item}</li>"))
+                parentnode.children.append(LeafNode(node.text))
             final_node.children.append(parentnode)
 
         #handle heading block
@@ -215,7 +217,6 @@ def markdown_to_html_node(markdown):
             final_node.children.append(parentnode)
         else:
             if parentnode.tag == "code":
-                parentnode.tag = "div"
                 text_nodes = text_to_text_nodes(TextNode(block[2:-2], TextType.NORMAL))
                 text_nodes = [node for node in text_nodes if node.text != ' ']
                 for node in text_nodes:
@@ -237,5 +238,37 @@ def markdown_to_html_node(markdown):
     
     return final_node
 
+def extract_title(markdown):
+    markdown_blocks = markdown_to_blocks(markdown)
+    title = block_to_block_type(markdown_blocks[0])
+    html = markdown_to_html_node(markdown_blocks[0]) 
 
-            
+    if not markdown_blocks or title.tag != "h1":
+        raise Exception("Title for the html page is missing the title should be h1 at the beginning of the file")
+    return html.children[0].children[0].value
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page form {from_path} to {dest_path} using {template_path}")
+    
+    markdown_file = open(from_path, 'r')
+    content = markdown_file.read()
+    markdown_file.close()
+    
+    template_file = open(template_path, 'r')
+    template_content = template_file.read()
+    template_file.close()
+
+    title = extract_title(content)
+    html_content = markdown_to_html_node(content)
+
+    html_file = open(dest_path, 'w')
+    html_file.write(template_content.replace("{{ Content }}", html_content.to_html()).replace("{{ Title }}", title))
+    html_file.close()    
+
+def generate_pages_recursive(from_path, template_path, dest_path):
+    for (path, folders, files) in os.walk(from_path):
+        for file in files:
+            target_path = path.replace(from_path, dest_path)
+            if not os.path.exists(target_path):
+                os.mkdir(target_path)
+            generate_page(os.path.join(path, file), os.path.join(template_path, 'template.html'), os.path.join(target_path, file.replace('.md', '.html')))
