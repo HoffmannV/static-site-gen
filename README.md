@@ -37,7 +37,7 @@ The Static Page Generator automates the process of converting Markdown files int
 ```
 project-root/
 │
-├── contents/               # Contains the Markdown (.md) files to be converted
+├── content/               # Contains the Markdown (.md) files to be converted
 ├── public/                 # Output folder for the generated HTML files
 ├── src/                    # Source code for the generator
 │   └── main.py             # Main Python script to run the generator
