@@ -26,6 +26,8 @@ def main():
 
     #Remove all files from the public dir
     print("Beginning file removal\n------------------------------------------")
+    if not os.path.exists(public_path):
+        os.mkdir('public')
     for file in os.listdir(public_path):
         file_path = os.path.join(public_path, file)
         print(f"Removing {file_path}")
