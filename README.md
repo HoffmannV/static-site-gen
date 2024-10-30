@@ -42,7 +42,7 @@ project-root/
 ├── src/                    # Source code for the generator
 │   └── main.py             # Main Python script to run the generator
 ├── static/                 # Contains assets like CSS and images
-│   ├── css                 # Folder for CSS files
+│   ├── index.css           # CSS file for styling
 │   └── images/             # Folder for images
 ├── template.html           # HTML template used for each page
 └── main.sh                 # Script to run the generator from the root folder
