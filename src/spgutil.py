@@ -213,7 +213,9 @@ def markdown_to_html_node(markdown):
             while block[0] == '#':
                 block = block[1:]
             block = block.strip()
-            parentnode.children.append(text_node_to_html_node(TextNode(block, TextType.NORMAL)))
+            text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
+            for node in text_nodes:
+                parentnode.children.append(text_node_to_html_node(node))
             final_node.children.append(parentnode)
         else:
             if parentnode.tag == "code":
@@ -223,9 +225,13 @@ def markdown_to_html_node(markdown):
                     parentnode.children.append(text_node_to_html_node(node))
                 final_node.children.append(parentnode)
             elif parentnode.tag == "blockquote":
-                text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
+                lines = block.split('\n')
+                
+                for i in range(len(lines)):
+                    lines[i] = lines[i][2:]
+                    
+                text_nodes = text_to_text_nodes(TextNode('\n'.join(lines), TextType.NORMAL))
                 for node in text_nodes:
-                    node.text = node.text[2:]
                     parentnode.children.append(text_node_to_html_node(node))
                 final_node.children.append(parentnode)
             elif parentnode.tag == "p":
