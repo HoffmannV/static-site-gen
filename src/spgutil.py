@@ -234,8 +234,9 @@ def markdown_to_html_node(markdown):
             final_node.children.append(parentnode)
         else:
             if parentnode.tag == "code":
-                text_nodes = text_to_text_nodes(TextNode(block[2:-2], TextType.NORMAL))
-                text_nodes = [node for node in text_nodes if node.text != ' ']
+                parentnode.tag = "pre"
+                block = block[3:-3].strip()
+                text_nodes = text_to_text_nodes(TextNode(f"`{block}`", TextType.NORMAL))
                 for node in text_nodes:
                     parentnode.children.append(text_node_to_html_node(node))
                 final_node.children.append(parentnode)
