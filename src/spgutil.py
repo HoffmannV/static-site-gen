@@ -188,9 +188,17 @@ def markdown_to_html_node(markdown):
             block_lines = block.split("\n")
             for i in range(len(block_lines)):
                 if block_lines[i][:2] == '* ':
-                    block_lines[i] = f"<li>{block_lines[i].replace("* ", "", 1)}</li>"
+                    block_lines[i] = f"{block_lines[i].replace("* ", "", 1).strip()}"
                 if block_lines[i][:2] == '- ':
-                    block_lines[i] = f"<li>{block_lines[i].replace("- ", "", 1)}</li>"
+                    block_lines[i] = f"{block_lines[i].replace("- ", "", 1).strip()}"
+
+                if block_lines[i][:3] == '[ ]':
+                    block_lines[i] = f"<li style=\"list-style:none\"><label><input type=\"checkbox\" />{block_lines[i][3:].strip()}</li></label>"
+                elif block_lines[i][:3] == '[x]':
+                    block_lines[i] = f"<li style=\"list-style:none\"><label><input type=\"checkbox\" checked/>{block_lines[i][3:].strip()}</li></label>"
+                else:
+                    block_lines[i] = f"<li>{block_lines[i].strip()}</li>"
+                
             block = "\n".join(block_lines)
             text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
             for node in text_nodes:
@@ -201,7 +209,14 @@ def markdown_to_html_node(markdown):
         elif parentnode.tag == "ol":
             tmp = block.split("\n")
             for i in range(len(tmp)):
-                tmp[i] = f"<li>{tmp[i].replace(f"{i+1}. ", "", 1)}</li>"
+                tmp[i] = f"{tmp[i].replace(f"{i+1}. ", "", 1)}"
+                if tmp[i][:3] == '[ ]':
+                    tmp[i] = f"<li style=\"list-style:none\"><label><input type=\"checkbox\" />{tmp[i][3:].strip()}</li></label>"
+                    #print(tmp[i])
+                elif tmp[i][:3] == '[x]':
+                    tmp[i] = f"<li style=\"list-style:none\"><label><input type=\"checkbox\" checked/>{tmp[i][3:].strip()}</li></label>"
+                else:
+                    tmp[i] = f"<li>{tmp[i].strip()}</li>"
             block = "\n".join(tmp)
             text_nodes = text_to_text_nodes(TextNode(block, TextType.NORMAL))
             for node in text_nodes:
@@ -226,10 +241,8 @@ def markdown_to_html_node(markdown):
                 final_node.children.append(parentnode)
             elif parentnode.tag == "blockquote":
                 lines = block.split('\n')
-                
                 for i in range(len(lines)):
                     lines[i] = lines[i][2:]
-                    
                 text_nodes = text_to_text_nodes(TextNode('\n'.join(lines), TextType.NORMAL))
                 for node in text_nodes:
                     parentnode.children.append(text_node_to_html_node(node))
