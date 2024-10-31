@@ -1,6 +1,6 @@
-# Static Page Generator
+# Static Site Generator
 
-This project is a **Static Page Generator** developed as part of the Boot.dev Back-End Developer Career Path. It converts `.md` files from the `contents` folder into complete HTML pages, using a predefined HTML template and outputs them to the `public` folder.
+This project is a **Static Site Generator** developed as part of the Boot.dev Back-End Developer Path. It converts `.md` files from the `contents` folder into complete HTML pages, using a predefined HTML template and outputs them to the `public` folder.
 
 ## Table of Contents
 
@@ -11,7 +11,7 @@ This project is a **Static Page Generator** developed as part of the Boot.dev Ba
 
 ## Description
 
-The Static Page Generator automates the process of converting Markdown files into HTML. The generator reads Markdown files from the `contents` folder, applies the `template.html` for layout and styling, and saves the generated HTML files in the `public` folder. You can run the program using `main.py` in the `src` folder or via `main.sh` in the root folder for convenience.
+The Static Site Generator automates the process of converting Markdown files into HTML. The generator reads Markdown files from the `contents` folder, applies the `template.html` for layout and styling, and saves the generated HTML files in the `public` folder. You can run the program using `main.py` in the `src` folder or via `main.sh` in the root folder for convenience.
 
 ## Usage
 
